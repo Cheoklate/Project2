@@ -1,0 +1,20 @@
+
+<%- include('partials/head') %>
+<%- include('partials/navbar') %>
+
+<div class="container" style="height: 100vh; padding: 40px">
+  <div class="row">
+  <% for (let i = 0; i < bodypartsInfo.length; i += 1) { %>
+    <div class="col-sm-6 col-md-4">
+      <div class="card" style="margin: 10px">
+        <img class="card-img-top" src="/bodyparts<%= i + 1 %>.png">
+        <div class="card-body">
+          <h5 class="card-title"><%= bodypartsInfo[i].name %></h5>
+        </div>
+      </div>
+    </div>
+  <% } %>
+  </div>
+</div>
+
+   <%- include ('partials/footer') %>

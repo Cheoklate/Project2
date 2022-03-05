@@ -1,0 +1,42 @@
+<%- include('partials/head') %> <%- include('partials/navbar') %>
+
+<div class="container entry-form">
+	<h2>Workout Creation Form</h2>
+	<p>Tell us what you did!</p>
+	<div
+		class="row justify-content-center align-items-center"
+		style="height: 80vh"
+	>
+		<div class="col-12 col-md-10">
+			<form class="entry-form-container" action="/workoutCreation" method="POST">
+				<div class="row">
+					<div class="col">
+						<div class="form-group">
+							<label for="name">Name: </label>
+							<input class="form-control" name="name" id="name" />
+						</div>
+					</div>
+					<div class="col">
+						<div class="form-group">
+							<label for="date">Date: </label>
+							<input
+								class="form-control"
+								type="date"
+								name="date"
+								id="date"
+								min="2020/01/01"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<br /><br />
+				<button type="submit" class="btn btn-secondary btn-block">
+					Submit
+				</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+<%- include ('partials/footer') %>
