@@ -1,18 +1,15 @@
 <%- include('partials/head') %>
 <%- include('partials/navbar') %>
-
-<div class="container entry-form" >
-
   
-  <h2>Workout Creation <%= id %> </h2>
+  <h2>Input exercises into workout <%= id %> </h2>
   <p>Tell us what you did!</p>
   <div class="row justify-content-center align-items-center" style="height: 80vh">
     <div class="col-12 col-md-10">
-      <form class="entry-form-container" action="/workoutCreation" method="POST" >
+      <form class="entry-form-container" action="/workoutCreation/<%= id %> " method="POST" >
         <div class="row">
             <div class="col-md-4">
               <label for="workouts_id">Exercise: </label>
-              <select class="form-control" name="workouts_id" id="workouts_id">
+              <select class="form-control" name="exercises_id" id="exercises_id">
                 <% workouts.forEach((type) => { %>
                   <option value="<%= type.id %>"><%= type.name %></option>
                   <% }) %>
@@ -25,59 +22,18 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="name">Reps: </label>
-                <input class="form-control" name="name" id="name">
+                <input class="form-control" name="reps" id="reps">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="name">Weight: </label>
-                <input class="form-control" name="name" id="name">
+                <input class="form-control" name="weight" id="weight">
               </div>
             </div>
     
-        <!-- <p>Body Part: </p>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="bathing" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Chest
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="feeding" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Back
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="walking" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Legs
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="resting" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Shoulders
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="flocking" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Biceps
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="flocking" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Tricpes
-          </label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" name="behaviour" value="flocking" id="behaviour">
-          <label class="form-check-label" for="behaviour">
-          Core
-          </label>
-        </div> -->
+
+
         
   
   

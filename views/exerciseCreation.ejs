@@ -1,0 +1,74 @@
+<%- include('partials/head') %>
+<%- include('partials/navbar') %>
+
+<div class="container entry-form" >
+  <h2>Exercise Creation Form</h2>
+  <p>Create a new Exercise!</p>
+  <div class="row justify-content-center align-items-center" style="height: 80vh">
+    <div class="col-12 col-md-10">
+      <form class="entry-form-container" action="/exerciseCreation" method="POST" >
+        <div class="row">
+          <div class="col">
+            <div class="form-group">
+              <label for="name">Name: </label>
+              <input class="form-control" name="name" id="name">
+            </div>
+          </div>
+
+  
+
+    
+        <p>Body part: </p>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="1" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Chest
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="2" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Back
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="3" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Legs
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="4" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Shoulders
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="5" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Biceps
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="6" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Tricpes
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="bodyparts" value="7" id="bodyparts">
+          <label class="form-check-label" for="bodyparts">
+          Core
+          </label>
+        </div>
+        
+  
+  
+        <br><br>
+        <button type="submit" class="btn btn-secondary btn-block">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include ('partials/footer') %>

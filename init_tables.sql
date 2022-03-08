@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS workouts (
   id SERIAL PRIMARY KEY,
-  date TEXT,
   name TEXT,
+  date TEXT,
   users_id INTEGER,
   CONSTRAINT fk_user
     FOREIGN KEY (users_id)

@@ -27,6 +27,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(methodOverride('_method'));
 app.use(cookieParser());
 
+// HASHING
+
 //ROUTES
 //SIGN UP ROUTES
 app.get('/signup', (req, res) => {
@@ -112,7 +114,9 @@ app.get('/', (req, res) => {
 
 //CREATE WORKOUT
 app.get('/workoutCreation', (req, res) => {
-	const workoutsQuery = 'SELECT * FROM workouts';
+	const userId = req.cookies.userId;
+	// console.log(req.cookies.userId);
+	const workoutsQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
 		if (workoutsQueryError) {
 		} else {
@@ -125,18 +129,22 @@ app.get('/workoutCreation', (req, res) => {
 });
 
 app.post('/workoutCreation', (req, res) => {
-	const workoutsQuery = 'SELECT * FROM workouts';
 	const entryQuery =
-		'INSERT INTO workouts (name, date) VALUES ($1, $2) RETURNING id';
+		'INSERT INTO workouts (name, date, users_id) VALUES ($1, $2, $3) RETURNING id';
 
 	const workoutCreationData = req.body;
+	const userId = req.cookies.userId;
 
-	const inputData = [workoutCreationData.name, workoutCreationData.date];
+	const inputData = [
+		workoutCreationData.name,
+		workoutCreationData.date,
+		userId,
+	];
 	pool.query(
 		entryQuery,
 		inputData,
 		(newWorkoutQueryError, newWorkoutQueryResult) => {
-			const id = (newWorkoutQueryResult.rows[0].id);
+			const id = newWorkoutQueryResult.rows[0].id;
 			if (newWorkoutQueryError) {
 			} else {
 				res.redirect(`/workoutCreation/${id}`);
@@ -155,7 +163,8 @@ app.get('/workoutCreation/:id', (req, res) => {
 	if (req.cookies.loggedInHash !== hashedCookieString) {
 		res.status(403).send('please log in');
 	} else {
-		const workoutsQuery = 'SELECT * FROM exercises';
+		const workoutsQuery = `SELECT * 
+		FROM exercises`;
 		pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
 			if (workoutsQueryError) {
 			} else {
@@ -170,22 +179,28 @@ app.get('/workoutCreation/:id', (req, res) => {
 });
 
 app.post('/workoutCreation/:id', (req, res) => {
-	const {id} = req.params
-	const workoutsQuery = 'SELECT * FROM workouts';
+	const id = req.params.id;
 	const entryQuery =
-		'INSERT INTO sets (reps, weight) VALUES ($1, $2) RETURNING id';
+		'INSERT INTO sets (reps, weight, exercises_id, workouts_id) VALUES ($1, $2, $3 ,$4) RETURNING id';
 
 	const workoutCreationData = req.body;
+	// console.log(workoutCreationData)
 
-	const inputData = [workoutCreationData.name, workoutCreationData.date];
+	const inputData = [
+		workoutCreationData.reps,
+		workoutCreationData.weight,
+		workoutCreationData.exercises_id,
+		id,
+	];
 	pool.query(
 		entryQuery,
 		inputData,
 		(newWorkoutQueryError, newWorkoutQueryResult) => {
-			const id = (newWorkoutQueryResult.rows[0].id);
+			// console.log(JSON.stringify(newWorkoutQueryResult.rows[0].id))
+			// const id = newWorkoutQueryResult.rows[0].id;
 			if (newWorkoutQueryError) {
 			} else {
-				res.redirect(`/workoutCreation/${id}`);
+				res.redirect(`/`);
 			}
 		}
 	);
@@ -194,16 +209,193 @@ app.post('/workoutCreation/:id', (req, res) => {
 app.get('/exercises/all', (req, res) => {
 	const getExerciseInfo = 'SELECT * FROM bodyparts';
 
-	pool.query(getExerciseInfo, (getExercisesInfoError, getExercisesInfoResult) => {
-		if (getExercisesInfoError) {
+	pool.query(
+		getExerciseInfo,
+		(getExercisesInfoError, getExercisesInfoResult) => {
+			if (getExercisesInfoError) {
+			} else {
+				const bodypartsInfo = getExercisesInfoResult.rows;
+				res.render('all-exercises', { bodypartsInfo });
+			}
+		}
+	);
+});
+
+//CREATE EXERCISE
+app.get('/exerciseCreation', (req, res) => {
+	const exerciseQuery = 'SELECT * FROM exercises';
+	pool.query(exerciseQuery, (exerciseQueryError, exerciseQueryResult) => {
+		if (exerciseQueryError) {
 		} else {
-			const bodypartsInfo = getExercisesInfoResult.rows;
-			res.render('all-exercises', { bodypartsInfo });
+			const data = {
+				exercises: exerciseQueryResult.rows,
+			};
+			res.render('exerciseCreation', data);
 		}
 	});
 });
 
+app.post('/exerciseCreation', (req, res) => {
+	const entryQuery = 'INSERT INTO exercises (name) VALUES ($1) RETURNING id';
 
-//CREATE EXERCISE	
+	const exerciseCreationData = req.body;
+
+	const inputData = [exerciseCreationData.name];
+
+	pool.query(
+		entryQuery,
+		inputData,
+		(newexerciseQueryError, newexerciseQueryResult) => {
+			if (newexerciseQueryError) {
+			} else {
+				const exerciseId = newexerciseQueryResult.rows[0].id;
+				exerciseCreationData.bodyparts.forEach((bodyparts) => {
+					const bodypartsIdQuery = `SELECT id FROM bodyparts WHERE name = '${bodyparts}'`;
+
+					pool.query(
+						bodypartsIdQuery,
+						(bodypartsIdQueryError, bodypartsIdQueryResult) => {
+							if (bodypartsIdQueryError) {
+							} else {
+								const bodypartsId = bodypartsIdQueryResult.rows[0].id;
+								const bodypartsData = [exerciseId, bodypartsId];
+
+								const notesbodypartsEntry =
+									'INSERT INTO exercise_bodyparts (exercises_id, bodyparts_id) VALUES ($1, $2)';
+
+								pool.query(
+									notesbodypartsEntry,
+									bodypartsData,
+									(notesbodypartsEntryError, notesbodypartsEntryResult) => {
+										if (notesbodypartsEntryError) {
+										} else {
+										}
+									}
+								);
+							}
+						}
+					);
+				});
+				res.redirect(`/all-exercises`);
+			}
+		}
+	);
+});
+
+app.get('/exercises/chest', (req, res) => {
+	const chestQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 1;
+	`;
+
+	pool.query(chestQuery, (chestQueryError, chestQueryResult) => {
+		if (chestQueryError) {
+		} else {
+			const data = chestQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/back', (req, res) => {
+	const backQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 2;
+	`;
+	pool.query(backQuery, (backQueryError, backQueryResult) => {
+		if (backQueryError) {
+		} else {
+			const data = backQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/legs', (req, res) => {
+	const legsQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 3;
+	`;
+	pool.query(legsQuery, (legsQueryError, legsQueryResult) => {
+		if (legsQueryError) {
+		} else {
+			const data = legsQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/shoulders', (req, res) => {
+	const shouldersQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 4;
+	`;
+
+	pool.query(shouldersQuery, (shouldersQueryError, shouldersQueryResult) => {
+		if (shouldersQueryError) {
+		} else {
+			const data = shouldersQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/biceps', (req, res) => {
+	const bicepsQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 5;
+	`;
+	pool.query(bicepsQuery, (bicepsQueryError, bicepsQueryResult) => {
+		if (bicepsQueryError) {
+		} else {
+			const data = bicepsQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/triceps', (req, res) => {
+	const tricepsQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 6;
+	`;
+
+	pool.query(tricepsQuery, (tricepsQueryError, tricepsQueryResult) => {
+		if (tricepsQueryError) {
+		} else {
+			const data = tricepsQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
+
+app.get('/exercises/core', (req, res) => {
+	const coreQuery = `SELECT exercises.id, exercises.name 
+	FROM exercises
+	INNER JOIN exercise_bodyparts
+	ON exercises.id = exercise_bodyparts.exercises_id
+	WHERE bodyparts_id = 7;
+	`;
+
+	pool.query(coreQuery, (coreQueryError, coreQueryResult) => {
+		if (coreQueryError) {
+		} else {
+			const data = coreQueryResult.rows;
+			res.render('bodypart_exercises', { data });
+		}
+	});
+});
 
 app.listen(PORT);
