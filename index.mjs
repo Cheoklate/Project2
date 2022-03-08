@@ -100,8 +100,8 @@ app.post('/login', (req, res) => {
 
 //LANDING PAGE ROUTES
 app.get('/', (req, res) => {
-	const allQuery = `SELECT *
-		FROM workouts`;
+	const userId = req.cookies.userId;
+	const allQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(allQuery, (allQueryError, allQueryResult) => {
 		if (allQueryError) {
 		} else {
@@ -154,28 +154,47 @@ app.post('/workoutCreation', (req, res) => {
 });
 
 //WORKOUT DATA INPUT
+
+app.get('/sets/:id', (req, res) => {
+	const id  = req.params.id;
+	console.log(id)
+	const allQuery = `SELECT exercises.name, sets.reps, sets.weight, sets.workouts_id
+		FROM sets
+		INNER JOIN exercises
+		ON sets.exercises_id = exercises.id
+		WHERE workouts_id = ${id};`;
+	pool.query(allQuery, (allQueryError, allQueryResult) => {
+		if (allQueryError) {
+		} else {
+			const allNotes = allQueryResult.rows;
+			const { loggedIn } = req.cookies;
+			res.render('sets', { allNotes, loggedIn });
+		}
+	});
+});
+
 app.get('/workoutCreation/:id', (req, res) => {
-	const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
-	const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
-	shaObj.update(unhashedCookieString);
-	const hashedCookieString = shaObj.getHash('HEX');
-	const { id } = req.params;
-	if (req.cookies.loggedInHash !== hashedCookieString) {
-		res.status(403).send('please log in');
-	} else {
-		const workoutsQuery = `SELECT * 
-		FROM exercises`;
-		pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
-			if (workoutsQueryError) {
-			} else {
-				const data = {
-					id: req.params.id,
-					workouts: workoutsQueryResult.rows,
-				};
-				res.render('workoutDataInput', data);
-			}
-		});
-	}
+    const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
+    const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
+    shaObj.update(unhashedCookieString);
+    const hashedCookieString = shaObj.getHash('HEX');
+    const { id } = req.params;
+    if (req.cookies.loggedInHash !== hashedCookieString) {
+        res.status(403).send('please log in');
+    } else {
+        const workoutsQuery = `SELECT * 
+        FROM exercises`;
+        pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
+            if (workoutsQueryError) {
+            } else {
+                const data = {
+                    id: req.params.id,
+                    workouts: workoutsQueryResult.rows,
+                };
+                res.render('workoutDataInput', data);
+            }
+        });
+    }
 });
 
 app.post('/workoutCreation/:id', (req, res) => {
@@ -200,7 +219,7 @@ app.post('/workoutCreation/:id', (req, res) => {
 			// const id = newWorkoutQueryResult.rows[0].id;
 			if (newWorkoutQueryError) {
 			} else {
-				res.redirect(`/`);
+				res.redirect(`/workoutCreation/${id}`);
 			}
 		}
 	);
@@ -249,14 +268,17 @@ app.post('/exerciseCreation', (req, res) => {
 			if (newexerciseQueryError) {
 			} else {
 				const exerciseId = newexerciseQueryResult.rows[0].id;
+				console.log(exerciseId)
 				exerciseCreationData.bodyparts.forEach((bodyparts) => {
+					console.log(exerciseCreationData)
 					const bodypartsIdQuery = `SELECT id FROM bodyparts WHERE name = '${bodyparts}'`;
-
+					console.log(bodypartsIdQuery)
 					pool.query(
 						bodypartsIdQuery,
 						(bodypartsIdQueryError, bodypartsIdQueryResult) => {
 							if (bodypartsIdQueryError) {
 							} else {
+								// console.log(bodypartsIdQueryResult)
 								const bodypartsId = bodypartsIdQueryResult.rows[0].id;
 								const bodypartsData = [exerciseId, bodypartsId];
 
@@ -276,18 +298,53 @@ app.post('/exerciseCreation', (req, res) => {
 						}
 					);
 				});
-				res.redirect(`/all-exercises`);
+				res.redirect(`/exercises/all`);
+			}
+		}
+	);
+});
+
+// deletes a single note
+app.delete('/workoutCreation/:id/delete', (req, res) => {
+	const workoutId = Number(req.params.id);
+	const getNoteInfoQuery = `SELECT * FROM workouts WHERE id = ${workoutId}`;
+	pool.query(
+		getNoteInfoQuery,
+		(getNoteInfoQueryError, getNoteInfoQueryResult) => {
+			if (getNoteInfoQueryError) {
+				console.log('error', getNoteInfoQueryError);
+			} else {
+				console.log(getNoteInfoQueryResult.rows);
+				const noteInfo = getNoteInfoQueryResult.rows[0];
+				console.log('user_id', noteInfo.users_id);
+				console.log('userId from cookies', req.cookies.userId);
+				console.log('note id:', noteInfo.id);
+				console.log('date', noteInfo.date);
+				if (noteInfo.users_id === Number(req.cookies.userId)) {
+					const deleteNoteQuery = `DELETE FROM workouts WHERE id = ${workoutId}`;
+					pool.query(deleteNoteQuery, (deleteNoteError, deleteNoteResult) => {
+						if (deleteNoteError) {
+							console.log('error', deleteNoteError);
+						} else {
+							res.redirect('/');
+						}
+					});
+				} else {
+					res.send('You are not authorised to delete this post. ');
+				}
 			}
 		}
 	);
 });
 
 app.get('/exercises/chest', (req, res) => {
-	const chestQuery = `SELECT exercises.id, exercises.name 
+	const chestQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 1;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 1 
 	`;
 
 	pool.query(chestQuery, (chestQueryError, chestQueryResult) => {
@@ -300,27 +357,32 @@ app.get('/exercises/chest', (req, res) => {
 });
 
 app.get('/exercises/back', (req, res) => {
-	const backQuery = `SELECT exercises.id, exercises.name 
+	const backQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 2;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 2 
 	`;
 	pool.query(backQuery, (backQueryError, backQueryResult) => {
 		if (backQueryError) {
 		} else {
 			const data = backQueryResult.rows;
+			console.log(data[0].bodyparts);
 			res.render('bodypart_exercises', { data });
 		}
 	});
 });
 
 app.get('/exercises/legs', (req, res) => {
-	const legsQuery = `SELECT exercises.id, exercises.name 
+	const legsQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 3;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 3 
 	`;
 	pool.query(legsQuery, (legsQueryError, legsQueryResult) => {
 		if (legsQueryError) {
@@ -332,11 +394,13 @@ app.get('/exercises/legs', (req, res) => {
 });
 
 app.get('/exercises/shoulders', (req, res) => {
-	const shouldersQuery = `SELECT exercises.id, exercises.name 
+	const shouldersQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 4;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 4 
 	`;
 
 	pool.query(shouldersQuery, (shouldersQueryError, shouldersQueryResult) => {
@@ -349,11 +413,13 @@ app.get('/exercises/shoulders', (req, res) => {
 });
 
 app.get('/exercises/biceps', (req, res) => {
-	const bicepsQuery = `SELECT exercises.id, exercises.name 
+	const bicepsQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 5;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 5 
 	`;
 	pool.query(bicepsQuery, (bicepsQueryError, bicepsQueryResult) => {
 		if (bicepsQueryError) {
@@ -365,11 +431,13 @@ app.get('/exercises/biceps', (req, res) => {
 });
 
 app.get('/exercises/triceps', (req, res) => {
-	const tricepsQuery = `SELECT exercises.id, exercises.name 
+	const tricepsQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 6;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 6 
 	`;
 
 	pool.query(tricepsQuery, (tricepsQueryError, tricepsQueryResult) => {
@@ -382,11 +450,13 @@ app.get('/exercises/triceps', (req, res) => {
 });
 
 app.get('/exercises/core', (req, res) => {
-	const coreQuery = `SELECT exercises.id, exercises.name 
+	const coreQuery = `SELECT exercises.id, exercises.name, bodyparts.name AS bodyparts
 	FROM exercises
 	INNER JOIN exercise_bodyparts
 	ON exercises.id = exercise_bodyparts.exercises_id
-	WHERE bodyparts_id = 7;
+	INNER JOIN bodyparts
+	ON exercise_bodyparts.bodyparts_id = bodyparts.id
+	WHERE bodyparts.id = 7 
 	`;
 
 	pool.query(coreQuery, (coreQueryError, coreQueryResult) => {

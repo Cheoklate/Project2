@@ -8,15 +8,17 @@
       <div class="table-responsive">
         <table class="table">
           <tr>
-            <th>Date</th>
-            <th class="d-none d-sm-table-cell">Workouts</th>
+            <th>Exercise</th>
+            <th class="d-none d-sm-table-cell">Reps</th>
+            <th class="d-none d-sm-table-cell">Weight(kg)</th>
             <th id="delete-heading">Delete</th>
           </tr>
           <tr>
             <% for (let i = 0; i < allNotes.length; i += 1) { %> 
-            <td><a href="/workoutCreation/<%= allNotes[i].id %>" style="color: darkslategray"><%= allNotes[i].date %></a></td>
+            <td><a href="/workoutCreation/<%= allNotes[i].id %>" style="color: darkslategray"><%= allNotes[i].name %></a></td>
             
-            <td><a href="/sets/<%= allNotes[i].id %>" style="color: darkslategray"><%= allNotes[i].name %></a></td>
+            <td><%= allNotes[i].reps%></td>
+            <td><%= allNotes[i].weight%></td>
             
 
             <td>
