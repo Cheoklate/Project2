@@ -116,7 +116,7 @@ app.post('/login', (req, res) => {
 //LANDING PAGE ROUTES
 app.get('/', (req, res) => {
 	const userId = req.cookies.userId;
-	const allQuery = `SELECT * FROM workouts`;
+	const allQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(allQuery, (allQueryError, allQueryResult) => {
 		if (allQueryError) {
 		} else {
