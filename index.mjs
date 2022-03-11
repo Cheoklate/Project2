@@ -34,7 +34,7 @@ const pool = new Pool(pgConnectionConfigs);
 
 // ...
 const app = express();
-const PORT = 3004;
+const PORT = process.env.PORT || 3004;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
