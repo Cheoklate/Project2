@@ -119,7 +119,7 @@ app.get('/', (req, res) => {
 	const allQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(allQuery, (allQueryError, allQueryResult) => {
 		if (allQueryError) {
-			res.status(403).send('please log in');
+			res.redirect('/login');
 		} else {
 			const allNotes = allQueryResult.rows;
 			const { loggedIn } = req.cookies;
@@ -135,6 +135,7 @@ app.get('/workoutCreation', (req, res) => {
 	const workoutsQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
 		if (workoutsQueryError) {
+			res.redirect('/login')
 		} else {
 			const data = {
 				workouts: workoutsQueryResult.rows,
