@@ -119,6 +119,7 @@ app.get('/', (req, res) => {
 	const allQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(allQuery, (allQueryError, allQueryResult) => {
 		if (allQueryError) {
+			res.status(403).send('please log in');
 		} else {
 			const allNotes = allQueryResult.rows;
 			const { loggedIn } = req.cookies;
