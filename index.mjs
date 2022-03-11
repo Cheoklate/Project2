@@ -81,7 +81,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
 	pool.query(
-		`SELECT * FROM users WHERE ema	il = '${req.body.email}'`,
+		`SELECT * FROM users WHERE email = '${req.body.email}'`,
 		(emailQueryError, emailQueryResult) => {
 			if (emailQueryError) {
 				res.status(503).send('request not successful');
