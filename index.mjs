@@ -9,26 +9,17 @@ const SALT = 'Hire an assassin to kill me please';
 const { Pool } = pg;
 
 let pgConnectionConfigs;
-if (process.env.DATABASE_URL) {
-	pgConnectionConfigs = {
-		connectionString: process.env.DATABASE_URL,
-		ssl: {
-			rejectUnauthorized: false,
-		},
-	};
-} else {
-	pgConnectionConfigs = {
-		user: 'gcheok',
-		host: 'localhost',
-		database: 'Project2',
-		port: 5432,
-	};
-}
+pgConnectionConfigs = {
+	user: 'gcheok',
+	host: 'localhost',
+	database: 'Project2',
+	port: 5432,
+};
 
 const pool = new Pool(pgConnectionConfigs);
 
 const app = express();
-const PORT = process.env.PORT || 3004;
+const PORT = 3004;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -75,7 +66,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
 	pool.query(
-		`SELECT * FROM users WHERE email = '${req.body.email}'`,
+		`SELECT * FROM users WHERE ema	il = '${req.body.email}'`,
 		(emailQueryError, emailQueryResult) => {
 			if (emailQueryError) {
 				res.status(503).send('request not successful');
