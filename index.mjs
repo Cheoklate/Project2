@@ -9,17 +9,26 @@ const SALT = 'Hire an assassin to kill me please';
 const { Pool } = pg;
 
 let pgConnectionConfigs;
-pgConnectionConfigs = {
-	user: 'gcheok',
-	host: 'localhost',
-	database: 'Project2',
-	port: 5432,
-};
+if (process.env.DATABASE_URL) {
+	pgConnectionConfigs = {
+		connectionString: process.env.DATABASE_URL,
+		ssl: {
+			rejectUnauthorized: false,
+		},
+	};
+} else {
+	pgConnectionConfigs = {
+		user: 'gcheok',
+		host: 'localhost',
+		database: 'Project2',
+		port: 5432,
+	};
+}
 
 const pool = new Pool(pgConnectionConfigs);
 
 const app = express();
-const PORT = 3004;
+const PORT = process.env.PORT || 3004;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -156,8 +165,8 @@ app.post('/workoutCreation', (req, res) => {
 //WORKOUT DATA INPUT
 
 app.get('/sets/:id', (req, res) => {
-	const id  = req.params.id;
-	console.log(id)
+	const id = req.params.id;
+	console.log(id);
 	const allQuery = `SELECT exercises.name, sets.reps, sets.weight, sets.workouts_id
 		FROM sets
 		INNER JOIN exercises
@@ -174,27 +183,27 @@ app.get('/sets/:id', (req, res) => {
 });
 
 app.get('/workoutCreation/:id', (req, res) => {
-    const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
-    const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
-    shaObj.update(unhashedCookieString);
-    const hashedCookieString = shaObj.getHash('HEX');
-    const { id } = req.params;
-    if (req.cookies.loggedInHash !== hashedCookieString) {
-        res.status(403).send('please log in');
-    } else {
-        const workoutsQuery = `SELECT * 
+	const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
+	const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
+	shaObj.update(unhashedCookieString);
+	const hashedCookieString = shaObj.getHash('HEX');
+	const { id } = req.params;
+	if (req.cookies.loggedInHash !== hashedCookieString) {
+		res.status(403).send('please log in');
+	} else {
+		const workoutsQuery = `SELECT * 
         FROM exercises`;
-        pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
-            if (workoutsQueryError) {
-            } else {
-                const data = {
-                    id: req.params.id,
-                    workouts: workoutsQueryResult.rows,
-                };
-                res.render('workoutDataInput', data);
-            }
-        });
-    }
+		pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
+			if (workoutsQueryError) {
+			} else {
+				const data = {
+					id: req.params.id,
+					workouts: workoutsQueryResult.rows,
+				};
+				res.render('workoutDataInput', data);
+			}
+		});
+	}
 });
 
 app.post('/workoutCreation/:id', (req, res) => {
@@ -268,11 +277,11 @@ app.post('/exerciseCreation', (req, res) => {
 			if (newexerciseQueryError) {
 			} else {
 				const exerciseId = newexerciseQueryResult.rows[0].id;
-				console.log(exerciseId)
+				console.log(exerciseId);
 				exerciseCreationData.bodyparts.forEach((bodyparts) => {
-					console.log(exerciseCreationData)
+					console.log(exerciseCreationData);
 					const bodypartsIdQuery = `SELECT id FROM bodyparts WHERE name = '${bodyparts}'`;
-					console.log(bodypartsIdQuery)
+					console.log(bodypartsIdQuery);
 					pool.query(
 						bodypartsIdQuery,
 						(bodypartsIdQueryError, bodypartsIdQueryResult) => {
@@ -466,6 +475,14 @@ app.get('/exercises/core', (req, res) => {
 			res.render('bodypart_exercises', { data });
 		}
 	});
+});
+
+//LOGOUT
+app.delete('/logout', (req, res) => {
+	res.clearCookie('loggedIn');
+	res.clearCookie('userId');
+	res.clearCookie('loggedInHash');
+	res.redirect('/login');
 });
 
 app.listen(PORT);
