@@ -3,10 +3,35 @@
 
 
 
+<div class="container landing-page"> 
+  <h3>Workout Records</h3>
+  <br>
+    <div class="table-responsive">
+      <table class="table">
+        <tr>
+          <th>Exercise</th>
+          <th class="d-none d-sm-table-cell">Reps</th>
+          <th class="d-none d-sm-table-cell">Weight(kg)</th>
+          <th id="delete-heading">Delete</th>
+        </tr>
+        <tr>
+          <% for (let i = 0; i < allNotes.length; i += 1) { %> 
+          <td><a href="/workoutCreation/<%= allNotes[i].id %>" style="color: darkslategray"><%= allNotes[i].name %></a></td>
+          
+          <td><%= allNotes[i].reps%></td>
+          <td><%= allNotes[i].weight%></td>
+          
 
-  
-  <h2>Input exercises into workout <%= id %> </h2>
-  <p>Tell us what you did!</p>
+          <td>
+            <form id="delete-button" action="/workoutCreation/<%= allNotes[i].id %>/delete?_method=DELETE" method="POST">
+              <button class="btn btn-sm btn-outline" type="submit"><i class="fa fa-trash-alt"></i></button>
+            </form></td>
+        </tr>
+            <% } %>
+      </table>
+    </div>
+</div>
+
   <div class="row justify-content-center align-items-center" style="height: 80vh">
     <div class="col-12 col-md-10">
       <form class="entry-form-container" action="/workoutCreation/<%= id %> " method="POST" >

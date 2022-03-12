@@ -179,7 +179,7 @@ app.get('/sets/:id', (req, res) => {
 		FROM sets
 		INNER JOIN exercises
 		ON sets.exercises_id = exercises.id
-		WHERE workouts_id = ${id};`;
+		WHERE workouts_id = ${id}`;
 	pool.query(allQuery, (allQueryError, allQueryResult) => {
 		if (allQueryError) {
 		} else {
@@ -191,27 +191,45 @@ app.get('/sets/:id', (req, res) => {
 });
 
 app.get('/workoutCreation/:id', (req, res) => {
-	const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
-	const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
-	shaObj.update(unhashedCookieString);
-	const hashedCookieString = shaObj.getHash('HEX');
-	const { id } = req.params;
-	if (req.cookies.loggedInHash !== hashedCookieString) {
-		res.status(403).send('please log in');
-	} else {
-		const workoutsQuery = `SELECT * 
-        FROM exercises`;
-		pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
-			if (workoutsQueryError) {
-			} else {
-				const data = {
-					id: req.params.id,
-					workouts: workoutsQueryResult.rows,
-				};
-				res.render('workoutDataInput', data);
-			}
-		});
-	}
+    const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
+    const unhashedCookieString = `${req.cookies.userId}-${SALT}`;
+    shaObj.update(unhashedCookieString);
+    const hashedCookieString = shaObj.getHash('HEX');
+
+    if (req.cookies.loggedInHash !== hashedCookieString) {
+        res.status(403).send('please log in');
+    } else {
+		const id = req.params.id;
+        const allQuery = `SELECT exercises.name, sets.reps, sets.weight, sets.workouts_id
+		FROM sets
+		INNER JOIN exercises
+		ON sets.exercises_id = exercises.id
+		WHERE workouts_id = ${id}`;
+        pool.query(allQuery, (allQueryError, allQueryResult) => {
+          if (allQueryError) {
+              // error occurred, do nothing
+          } else {
+              const workoutsQuery = `SELECT * FROM exercises`; 
+              pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
+                if (workoutsQueryError) {
+                    // error occurred, do nothing
+                } else {
+                    const dataId = req.params.id;
+                    const dataWorkouts = workoutsQueryResult.rows;
+                    const dataAllNotes = allQueryResult.rows;
+                    const dataLoggedIn = req.cookies.loggedIn;
+
+                    res.render('workoutDataInput', {
+                      id: dataId,
+                      workouts: dataWorkouts,
+                      allNotes: dataAllNotes,
+                      loggedIn: dataLoggedIn
+                    });
+                }
+              });
+          }
+        });
+    }
 });
 
 app.post('/workoutCreation/:id', (req, res) => {
