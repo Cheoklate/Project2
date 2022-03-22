@@ -131,7 +131,6 @@ app.get('/', (req, res) => {
 //CREATE WORKOUT
 app.get('/workoutCreation', (req, res) => {
 	const userId = req.cookies.userId;
-	// console.log(req.cookies.userId);
 	const workoutsQuery = `SELECT * FROM workouts WHERE users_id = ${userId}`;
 	pool.query(workoutsQuery, (workoutsQueryError, workoutsQueryResult) => {
 		if (workoutsQueryError) {
@@ -174,7 +173,6 @@ app.post('/workoutCreation', (req, res) => {
 
 app.get('/sets/:id', (req, res) => {
 	const id = req.params.id;
-	console.log(id);
 	const allQuery = `SELECT exercises.name, sets.reps, sets.weight, sets.workouts_id
 		FROM sets
 		INNER JOIN exercises
@@ -238,7 +236,6 @@ app.post('/workoutCreation/:id', (req, res) => {
 		'INSERT INTO sets (reps, weight, exercises_id, workouts_id) VALUES ($1, $2, $3 ,$4) RETURNING id';
 
 	const workoutCreationData = req.body;
-	// console.log(workoutCreationData)
 
 	const inputData = [
 		workoutCreationData.reps,
@@ -250,7 +247,6 @@ app.post('/workoutCreation/:id', (req, res) => {
 		entryQuery,
 		inputData,
 		(newWorkoutQueryError, newWorkoutQueryResult) => {
-			// console.log(JSON.stringify(newWorkoutQueryResult.rows[0].id))
 			// const id = newWorkoutQueryResult.rows[0].id;
 			if (newWorkoutQueryError) {
 			} else {
@@ -303,17 +299,13 @@ app.post('/exerciseCreation', (req, res) => {
 			if (newexerciseQueryError) {
 			} else {
 				const exerciseId = newexerciseQueryResult.rows[0].id;
-				console.log(exerciseId);
 				exerciseCreationData.bodyparts.forEach((bodyparts) => {
-					console.log(exerciseCreationData);
 					const bodypartsIdQuery = `SELECT id FROM bodyparts WHERE name = '${bodyparts}'`;
-					console.log(bodypartsIdQuery);
 					pool.query(
 						bodypartsIdQuery,
 						(bodypartsIdQueryError, bodypartsIdQueryResult) => {
 							if (bodypartsIdQueryError) {
 							} else {
-								// console.log(bodypartsIdQueryResult)
 								const bodypartsId = bodypartsIdQueryResult.rows[0].id;
 								const bodypartsData = [exerciseId, bodypartsId];
 
@@ -347,19 +339,12 @@ app.delete('/workoutCreation/:id/delete', (req, res) => {
 		getNoteInfoQuery,
 		(getNoteInfoQueryError, getNoteInfoQueryResult) => {
 			if (getNoteInfoQueryError) {
-				console.log('error', getNoteInfoQueryError);
 			} else {
-				console.log(getNoteInfoQueryResult.rows);
 				const noteInfo = getNoteInfoQueryResult.rows[0];
-				console.log('user_id', noteInfo.users_id);
-				console.log('userId from cookies', req.cookies.userId);
-				console.log('note id:', noteInfo.id);
-				console.log('date', noteInfo.date);
 				if (noteInfo.users_id === Number(req.cookies.userId)) {
 					const deleteNoteQuery = `DELETE FROM workouts WHERE id = ${workoutId}`;
 					pool.query(deleteNoteQuery, (deleteNoteError, deleteNoteResult) => {
 						if (deleteNoteError) {
-							console.log('error', deleteNoteError);
 						} else {
 							res.redirect('/');
 						}
@@ -404,7 +389,6 @@ app.get('/exercises/back', (req, res) => {
 		if (backQueryError) {
 		} else {
 			const data = backQueryResult.rows;
-			console.log(data[0].bodyparts);
 			res.render('bodypart_exercises', { data });
 		}
 	});
